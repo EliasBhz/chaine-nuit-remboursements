@@ -1,4 +1,7 @@
 # shellcheck shell=sh
+# Les variables définies ici sont lues par les jobs qui sourcent ce fichier :
+# analysé seul, ShellCheck les signalerait à tort comme inutilisées.
+# shellcheck disable=SC2034
 # Bibliothèque commune aux jobs : codes retour, répertoires, logs JSON, accès à la base.
 # Le job positionne JOB_REP (répertoire du script), source ce fichier puis appelle initialiser_job.
 # Shell POSIX strict (ni local, ni tableaux, ni pipefail) pour tourner à l'identique sous ksh et bash.
