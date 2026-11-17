@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: ShellCheck en mode POSIX
+        run: shellcheck -x -s sh jobs/*.sh jobs/lib/commun.sh tests/*.sh
+
+  images-et-tests:
+    runs-on: ubuntu-24.04
+    needs: shellcheck
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configuration de démonstration
+        run: cp .env.example .env
+      - name: Build des images
+        run: docker compose -f docker/compose.yaml --env-file .env --profile test build
+      - name: Tests bats sous ksh et bash, avec PostgreSQL
+        run: make test
+        env:
+          # En CI, une base absente fait échouer les tests au lieu de les sauter.
+          EXIGER_BASE: "1"
+      - name: Arrêt des conteneurs
+        if: always()
+        run: make down
