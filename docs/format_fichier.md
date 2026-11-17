@@ -34,3 +34,30 @@ Codes d'acte (libellés et taux simplifiés, sans valeur réglementaire) :
 | `INFI` | Acte infirmier | 60 % |
 | `KINE` | Séance de kinésithérapie | 60 % |
 | `PHAR` | Délivrance en pharmacie | 65 % |
+
+## Contrôle de format
+
+Le job `controler_format` vérifie d'abord l'entête de chaque fichier : un entête différent
+arrête le job en erreur fonctionnelle, sans traiter aucune ligne du lot.
+
+Chaque ligne est ensuite contrôlée dans l'ordre suivant ; le premier contrôle en échec donne
+le motif de rejet.
+
+| Motif | Contrôle |
+|-------|----------|
+| `nombre_champs` | 7 champs exactement |
+| `id_feuille` | Format `FS-AAAAMMJJ-NNNNNN` |
+| `doublon` | Identifiant déjà vu dans le lot, tous fichiers confondus |
+| `id_assure` | Format `ASSURE-FICTIF-NNNNNN` |
+| `id_professionnel` | Format `PS-FICTIF-NNNN` |
+| `date_soins` | Date au format attendu et existante |
+| `date_future` | Date postérieure à la date de traitement |
+| `code_acte` | Code connu |
+| `montant` | Format `NNN.NN`, strictement positif |
+| `ald` | `O` ou `N` |
+
+Sorties :
+
+- `valides/FS_AAAAMMJJ_NN.csv` : lignes valides, sans entête ;
+- `rejets/FS_AAAAMMJJ_NN.csv.rejets` : une ligne par rejet, `numero_de_ligne;motif;ligne_d_origine` ;
+- `travail/controle_AAAAMMJJ.stats` : bilan `cle=valeur` (lignes lues, valides, rejets, taux, détail par motif).
