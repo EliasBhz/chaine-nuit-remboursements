@@ -1,0 +1,46 @@
+# Définition de la chaîne de nuit : l'équivalent d'une application dans un ordonnanceur de production.
+# Par job : commande (relative à la racine du dépôt), depend_de, essais (1), delai_relance en s (0),
+# duree_max en s (3600). Seules les erreurs techniques (code 3) sont relancées.
+chaine: nuit_remboursements
+
+# Fenêtre de lancement des jobs ; elle passe minuit. Heures entre guillemets (sinon YAML les lit en base 60).
+fenetre:
+  debut: "20:00"
+  fin: "06:00"
+
+jobs:
+  - nom: generer_fichiers
+    commande: jobs/generer_fichiers.sh
+    duree_max: 600
+
+  - nom: controler_format
+    commande: jobs/controler_format.sh
+    depend_de: [generer_fichiers]
+    duree_max: 600
+
+  # Jobs dépendants de la base : relancés si elle est momentanément indisponible.
+  - nom: charger_base
+    commande: jobs/charger_base.sh
+    depend_de: [controler_format]
+    essais: 3
+    delai_relance: 30
+    duree_max: 900
+
+  - nom: calculer_remboursements
+    commande: jobs/calculer_remboursements.sh
+    depend_de: [charger_base]
+    essais: 3
+    delai_relance: 30
+    duree_max: 900
+
+  - nom: exporter_paiements
+    commande: jobs/exporter_paiements.sh
+    depend_de: [calculer_remboursements]
+    essais: 3
+    delai_relance: 30
+    duree_max: 600
+
+  - nom: archiver_purger
+    commande: jobs/archiver_purger.sh
+    depend_de: [exporter_paiements]
+    duree_max: 600

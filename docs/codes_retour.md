@@ -12,6 +12,20 @@
 La distinction entre 2 et 3 est la règle d'exploitation centrale : seule une erreur technique
 a une chance de disparaître d'elle-même (base redémarrée, réseau rétabli).
 
+## Codes retour de l'ordonnanceur
+
+L'ordonnanceur reprend le code du job sur lequel la chaîne s'est arrêtée, ou renvoie 1 si un job
+au moins a terminé en alerte, 0 sinon. Deux cas lui sont propres :
+
+| Code | Cas |
+|------|-----|
+| 2 | Hors de la fenêtre horaire, ou chaîne déjà lancée pour ce lot sans `--reprise` ni `--depuis-debut` |
+| 3 | Définition YAML invalide (champ manquant, dépendance inconnue, cycle) |
+| 4 | Une exécution de la chaîne est déjà en cours (verrou) |
+
+L'état de chaque lot est conservé dans `$CHAINE_ETAT/etat-AAAAMMJJ.json` ; c'est lui qui permet
+la reprise. La sortie brute de chaque job est dans `$CHAINE_LOGS/AAAAMMJJ/<job>.out`.
+
 ## Format des logs
 
 Chaque job écrit une ligne JSON par événement, sur sa sortie standard et dans
