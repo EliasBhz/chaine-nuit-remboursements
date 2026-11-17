@@ -1,0 +1,4 @@
+# Les scripts tournent sous Linux : fins de ligne LF quel que soit le poste de développement.
+* text=auto eol=lf
+*.png binary
+*.gz binary

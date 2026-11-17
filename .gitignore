@@ -1,0 +1,6 @@
+# Identifiants locaux : seul .env.example est versionné
+.env
+
+__pycache__/
+*.pyc
+*.tmp
