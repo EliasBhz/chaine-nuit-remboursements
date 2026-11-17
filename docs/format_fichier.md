@@ -61,3 +61,21 @@ Sorties :
 - `valides/FS_AAAAMMJJ_NN.csv` : lignes valides, sans entête ;
 - `rejets/FS_AAAAMMJJ_NN.csv.rejets` : une ligne par rejet, `numero_de_ligne;motif;ligne_d_origine` ;
 - `travail/controle_AAAAMMJJ.stats` : bilan `cle=valeur` (lignes lues, valides, rejets, taux, détail par motif).
+
+## Fichier de paiements
+
+- Emplacement : `sortie/PAI_AAAAMMJJ.csv`, accompagné de `PAI_AAAAMMJJ.csv.sha256`
+- Un paiement par assuré et par lot, trié par assuré
+
+```
+id_paiement;id_assure;nb_feuilles;montant
+PAI-20250115-000001;ASSURE-FICTIF-000001;2;49.00
+```
+
+Avant publication, le total du fichier est comparé au total des remboursements en base ;
+un écart arrête le job en erreur fonctionnelle et le fichier n'est pas publié.
+
+## Compte rendu de traitement
+
+`sortie/CR_AAAAMMJJ.txt` : volumes reçus, rejets par motif, montants présentés et remboursés,
+nombre de paiements et empreinte du fichier de paiements.
