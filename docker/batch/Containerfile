@@ -1,0 +1,35 @@
+# Serveur batch sur Rocky Linux 9, binaire-compatible RHEL 9.
+# Cible "batch" : exécution de la chaîne. Cible "test" : ajoute ksh, ShellCheck et bats.
+
+FROM docker.io/rockylinux/rockylinux:9 AS batch
+
+RUN dnf -y module enable postgresql:16 \
+ && dnf -y install --setopt=install_weak_deps=False \
+        postgresql python3 python3-pyyaml gawk gzip tar findutils tzdata \
+ && dnf clean all
+
+ENV CHAINE_DONNEES=/data
+WORKDIR /opt/chaine
+COPY jobs/ jobs/
+COPY ordonnanceur/ ordonnanceur/
+COPY sql/ sql/
+
+# Données accessibles au groupe root : convention OpenShift, qui impose un UID arbitraire membre du GID 0.
+RUN chmod 0755 jobs/*.sh ordonnanceur/ordonnanceur.py \
+ && mkdir -p /data \
+ && chgrp -R 0 /data \
+ && chmod -R g=u /data
+
+USER 1001
+CMD ["sleep", "infinity"]
+
+
+FROM batch AS test
+
+USER 0
+RUN dnf -y install epel-release \
+ && dnf -y install --setopt=install_weak_deps=False ksh ShellCheck bats \
+ && dnf clean all
+COPY tests/ tests/
+USER 1001
+CMD ["sh", "tests/lancer_tests.sh"]

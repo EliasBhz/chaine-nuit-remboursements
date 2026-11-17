@@ -1,0 +1,59 @@
+# Plateforme de démonstration : un serveur batch et sa base PostgreSQL, sur des images compatibles RHEL.
+# Les identifiants viennent de .env (modèle : .env.example) ; rien n'est écrit en dur ici.
+# Lancement via le Makefile, qui passe --env-file .env.
+name: chaine-nuit
+
+x-acces-base: &acces-base
+  PGHOST: base
+  PGUSER: ${BASE_UTILISATEUR:?à définir dans .env}
+  PGPASSWORD: ${BASE_MOT_DE_PASSE:?à définir dans .env}
+  PGDATABASE: ${BASE_NOM:?à définir dans .env}
+  TZ: Europe/Paris
+
+services:
+  base:
+    image: quay.io/sclorg/postgresql-16-c9s:latest
+    environment:
+      POSTGRESQL_USER: ${BASE_UTILISATEUR:?à définir dans .env}
+      POSTGRESQL_PASSWORD: ${BASE_MOT_DE_PASSE:?à définir dans .env}
+      POSTGRESQL_DATABASE: ${BASE_NOM:?à définir dans .env}
+    volumes:
+      - base-donnees:/var/lib/pgsql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRESQL_USER\" -d \"$$POSTGRESQL_DATABASE\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  batch:
+    build:
+      context: ..
+      dockerfile: docker/batch/Containerfile
+      target: batch
+    image: chaine-nuit/batch:local
+    environment:
+      <<: *acces-base
+    volumes:
+      - batch-donnees:/data
+    depends_on:
+      base:
+        condition: service_healthy
+
+  # Lancé uniquement par make test et make lint.
+  test:
+    build:
+      context: ..
+      dockerfile: docker/batch/Containerfile
+      target: test
+    image: chaine-nuit/batch-test:local
+    profiles: [test]
+    environment:
+      <<: *acces-base
+      EXIGER_BASE: ${EXIGER_BASE:-0}
+    depends_on:
+      base:
+        condition: service_healthy
+
+volumes:
+  base-donnees:
+  batch-donnees:
